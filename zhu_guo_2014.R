@@ -26,17 +26,28 @@ k <- 10   # number of nearest neighbors
 
 
 # load data from csv files
-centroids <- read_csv("msoa_popweightedcentroids.csv") %>% 
+## centroids
+centroidsURL <- "http://ingrid.geog.ucl.ac.uk/~james/"
+centroidsFile <- "msoa_popweightedcentroids.csv"
+centroids <- read.csv(url(paste0(centroidsURL, centroidsFile))) %>% 
     rename(code = Code, 
            name = Name, 
            east = East, 
            north = North)
+## flow trajectories
+temp <- tempfile()
+flowsURL <- "http://marlin.casa.ucl.ac.uk/~james/"
+flowsFile <- "wu03ew_v1.csv.zip"
+download.file(paste0(flowsURL, flowsFile), temp, mode="wb")
+unzip(temp, "wu03ew_v1.csv")
 flows <- read_csv("wu03ew_v1.csv") %>% 
     select(o = `Area of usual residence`, 
            d = `Area of workplace`, 
            weight = `All categories: Method of travel to work`) %>% 
     filter(weight >= 1000,                # remove flows with weight < 20 and 
            o != d)                       # internal flows
+temp <- NULL
+file.remove("wu03ew_v1.csv")
 
 # extract locations
 usedCentroids <- c(flows$o, flows$d)
